@@ -1,0 +1,17 @@
+{
+  "_note": "พอร์ตตัวอย่าง (ตัวเลขสมมติ ไม่ใช่พอร์ตจริงของใคร) ใช้ทดสอบระบบ พอร์ตจริงจะทำหลังมีระบบล็อกอิน ระหว่างนี้แก้ตัวเลขได้ที่หน้า 'พอร์ต' บนเว็บ (เก็บในเบราว์เซอร์) หรือแก้ไฟล์นี้",
+  "owner": "demo",
+  "snapshot_date": "2026-11-16",
+  "fx_usdthb": 33.83,
+  "holdings": [
+    {"ticker": "AAPL", "name": "Apple",          "cost_usd": 600.00, "value_usd": 705.00,  "shares": 2},
+    {"ticker": "TSLA", "name": "Tesla",          "cost_usd": 340.00, "value_usd": 380.00,  "shares": 1},
+    {"ticker": "JPM",  "name": "JPMorgan Chase", "cost_usd": 310.00, "value_usd": 338.00,  "shares": 1},
+    {"ticker": "NVDA", "name": "NVIDIA",         "cost_usd": 700.00, "value_usd": 624.00,  "shares": 4},
+    {"ticker": "MRNA", "name": "Moderna",        "cost_usd": 450.00, "value_usd": 430.00,  "shares": 2},
+    {"ticker": "LLY",  "name": "Eli Lilly",      "cost_usd": 650.00, "value_usd": 716.00,  "shares": 0.5},
+    {"ticker": "PLTR", "name": "Palantir",       "cost_usd": 420.00, "value_usd": 481.00,  "shares": 3},
+    {"ticker": "SPCX", "name": "SpaceX",         "cost_usd": 280.00, "value_usd": 274.00,  "shares": 2}
+  ],
+  "watchlist": []
+}
