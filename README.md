@@ -40,3 +40,14 @@ repo เป็น public (ตั้งใจใช้เป็นผลงาน
 
 ## ตั้งให้รันทุกวันอัตโนมัติ (GitHub Actions)
 คัดลอก `docs/daily.yml.example` ไปเป็น `.github/workflows/daily.yml` (`mkdir -p .github/workflows && cp docs/daily.yml.example .github/workflows/daily.yml`) รันทุกวัน 19:30 น. เวลาไทย แล้ว commit `site/data` กลับเข้า repo → ตั้ง secret `STOCKBRO_SEC_UA` ที่ Settings → Secrets → Actions ก่อน แล้วเปิด GitHub Pages ที่โฟลเดอร์ `site` (หรือต่อ Vercel) เพื่อเสิร์ฟหน้าเว็บ
+
+## อีเมล brief (ไม่ใช้ LLM)
+1. เปิด 2-Step Verification ของ Gmail แล้วสร้าง **App Password** (Google Account → Security → App passwords) ได้รหัส 16 ตัว
+2. ทดลองบนเครื่อง: `export STOCKBRO_SMTP_USER="you@gmail.com"; export STOCKBRO_SMTP_PASS="รหัส16ตัว"` แล้ว `cd services && python3 -m stockbro_engine.mail --dry-run` (ดูข้อความ) ตามด้วยรันจริงโดยไม่มี `--dry-run`
+3. บน GitHub: ใส่ secrets `STOCKBRO_SMTP_USER`, `STOCKBRO_SMTP_PASS`, `STOCKBRO_MAIL_TO` (ดู `docs/daily.yml.example`) **ห้ามใส่รหัสในไฟล์ใน repo**
+
+## ตรวจข่าวจากลิงก์
+`cd services && python3 -m stockbro_engine.check "https://ลิงก์ข่าว"` บอกแหล่ง (ทางการ/สำนักข่าวใหญ่/ไม่รู้จัก), อายุข่าว, หุ้นในพอร์ตที่เกี่ยวข้อง และราคาขยับไปแล้วเท่าไหร่ตั้งแต่ข่าวออก **ไม่ได้ตรวจว่าเนื้อหาจริงหรือเท็จ**
+
+## ปฏิทิน FOMC/CPI/งบ
+แก้ได้ที่ `config/calendar.json` (ทุกรายการมีลิงก์แหล่งทางการ) วันประกาศงบของแต่ละหุ้นใส่เองที่ `"next_earnings": "YYYY-MM-DD"` ใน `config/portfolio.json` ระบบไม่เดาวันที่

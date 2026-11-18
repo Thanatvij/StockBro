@@ -10,6 +10,7 @@ const NAV = [
   ["market.html", "ตลาด"], ["glossary.html", "ศัพท์"],
 ];
 const TH_TZ = "Asia/Bangkok";
+const LOGO = '<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="13" fill="#12151c" stroke="#2c3550"/><path d="M14 14v22M24 10v24M34 8v22" stroke="#3ddc97" stroke-width="2" stroke-linecap="round"/><rect x="11" y="20" width="6" height="12" rx="1.5" fill="#ff6b81"/><rect x="21" y="16" width="6" height="14" rx="1.5" fill="#3ddc97"/><rect x="31" y="12" width="6" height="12" rx="1.5" fill="#3ddc97"/></svg>';
 let D = null;            // ข้อมูลทั้งหมดจาก report.json
 let GLOSS = {};          // key -> {name, short, long}
 
@@ -56,7 +57,7 @@ function chrome(active, body) {
   if (D.mode === "offline") banner = '<div class="banner">⚠ ข้อมูลตัวอย่าง (offline) ราคา/ข่าวในหน้านี้ไม่ใช่ของจริง ใช้ทดสอบหน้าตาเท่านั้น</div>';
   else if (D._fallback) banner = '<div class="banner">ยังไม่มีข้อมูลจริง (data/report.json) กำลังแสดงข้อมูลตัวอย่าง รัน <code>python3 -m stockbro_engine.run</code> เพื่อสร้างข้อมูลจริง</div>';
   $("#app").innerHTML =
-    `<nav><a class="logo" href="index.html"><span class="mark">καιρός</span> StockBro <small>Investment Bro</small></a>${nav}</nav>` +
+    `<nav><a class="logo" href="index.html">${LOGO}<span>Stock<i>Bro</i></span></a>${nav}</nav>` +
     `${banner}${body}<div class="foot">ข้อมูล ณ ${esc(gen)} · ${esc(D.disclaimer)}</div>`;
 }
 function fail(e) {
@@ -180,6 +181,18 @@ function pageNews() {
 }
 
 /* ---------- หน้าตลาด ---------- */
+function calendarHtml() {
+  const c = D.calendar || { events: [], missing_earnings: [] };
+  const rows = c.events.map((e) => {
+    const when = e.days_until === 0 ? "วันนี้" : e.days_until === 1 ? "พรุ่งนี้" : `อีก ${e.days_until} วัน`;
+    const src = e.source ? ` <a href="${esc(e.source)}" target="_blank" rel="noopener">แหล่งทางการ ↗</a>` : "";
+    return `<div class="card"><b>${esc(e.date)} · ${when}</b> ${e.time_th ? `<span class="mut small">· ${esc(e.time_th)}</span>` : ""}
+      <div>${esc(e.title)} ${GLOSS[e.type] ? tip(e.type) : ""}${src}</div></div>`;
+  }).join("") || '<div class="card mut">ยังประเมินไม่ได้ — ไม่มีเหตุการณ์ใน 45 วันข้างหน้าในไฟล์ปฏิทิน</div>';
+  const miss = c.missing_earnings.length
+    ? `<div class="card mut small">วันประกาศงบของ ${esc(c.missing_earnings.join(", "))} ยังไม่ระบุ (ระบบไม่เดาวันที่) ใส่เองได้โดยเพิ่ม <code>"next_earnings": "YYYY-MM-DD"</code> ในไฟล์ config ของหุ้นตัวนั้น</div>` : "";
+  return rows + miss + '<div class="mut small">วันเวลาเป็นตามตารางที่แหล่งทางการประกาศ อาจเลื่อน ตรวจที่ลิงก์ก่อนใช้ตัดสินใจ</div>';
+}
 function pageMarket() {
   const names = { "^GSPC": "S&P 500", "^IXIC": "Nasdaq", "^VIX": "VIX (ความกลัวของตลาด)", "THB=X": "USD/THB" };
   const m = D.market || {};
@@ -193,8 +206,7 @@ function pageMarket() {
     vix = `<div class="say">VIX อยู่ที่ ${num(v, 1)} → ${lvl} (เกณฑ์โดยประมาณ ดู ${tip("vix")})</div>`;
   }
   chrome("market.html", `<h1>ภาพรวมตลาด</h1><div class="grid">${cards}</div>${vix}
-    <h2>ปฏิทินเหตุการณ์ (งบ, FOMC, CPI)</h2>
-    <div class="card mut">ยังประเมินไม่ได้ — ระบบยังไม่มีแหล่งปฏิทินที่เชื่อถือได้และฟรี เพื่อไม่ให้แต่งวันที่ขึ้นมา จึงยังไม่แสดง (อยู่ในแผน: ดึงวันประกาศงบจากแหล่งทางการ/SEC)</div>`);
+    <h2>ปฏิทินเหตุการณ์ (FOMC, CPI, งบ)</h2>${calendarHtml()}`);
 }
 
 /* ---------- หน้าหุ้นรายตัว ---------- */
