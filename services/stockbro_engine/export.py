@@ -63,6 +63,7 @@ def build_payload(rep: Dict, bars_by_ticker: Dict[str, List[Dict]]) -> Dict:
         "totals": {"value": rep["total_value"], "cost": rep["total_cost"], "pl": rep["total_pl"], "pl_pct": rep["total_pl_pct"]},
         "holdings": [holding_view(h, bars_by_ticker.get(h["ticker"], [])) for h in rep["holdings"]],
         "market": rep.get("market", {}),
+        "calendar": rep.get("calendar", {"events": [], "missing_earnings": []}),
         "errors": rep.get("errors", []),
         "glossary": as_list(),
     }

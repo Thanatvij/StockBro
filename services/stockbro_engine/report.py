@@ -46,7 +46,7 @@ def build_report(cfg: Dict, prices: Dict[str, Dict], newsdata: Dict, mode: str,
         row["pl"] = row["value"] - row["cost"]
         row["pl_pct"] = row["pl"] / row["cost"] * 100 if row["cost"] else None
         kept, dropped = filter_relevant(newsdata["news"].get(t, []), t, h["name"], h.get("aliases", []))
-        row["news"] = score_news(kept, now, top=6)
+        row["news"] = score_news(kept, now, top=6, universe=[x["ticker"] for x in cfg["holdings"]])
         row["news_dropped"] = dropped
         row["filings"] = newsdata["filings"].get(t, [])
         holdings.append(row)

@@ -58,12 +58,12 @@ def portfolio_lines(rep: Dict) -> List[str]:
     out = []
     top = max(hs, key=lambda h: h["weight"] or 0)
     drop = top["weight"] * DROP_SCENARIO_PCT / 100
-    out.append(f"Bro {top['ticker']} คือตัวใหญ่สุดในพอร์ตนายเลย {top['weight']:.0f}% ถ้ามันตก {DROP_SCENARIO_PCT:.0f}% พอร์ตหุ้นรายตัวจะหายไปราว {drop:.1f}% "
+    out.append(f"{top['ticker']} คือตัวใหญ่สุดในพอร์ตนายเลย {top['weight']:.0f}% ถ้ามันตก {DROP_SCENARIO_PCT:.0f}% พอร์ตหุ้นรายตัวจะหายไปราว {drop:.1f}% "
                f"(คิดแบบง่ายๆ ไม่รวมตัวอื่นขยับตาม) ยิ่งตัวเดียวใหญ่ พอร์ตยิ่งเสี่ยงขึ้นกับมันตัวเดียวนะ")
     losers = sorted([h for h in hs if h["pl"] < 0], key=lambda h: h["pl_pct"])
     if losers:
         txt = ", ".join(f"{h['ticker']} {h['pl_pct']:.1f}%" for h in losers[:3])
-        out.append(f"ตัวที่แดงอยู่ตอนนี้: {txt} ติดลบไม่ได้แปลว่าต้องขายนะ ลองดูว่าข่าวที่ทำให้ตกยังอยู่ไหม")
+        out.append(f"ตัวที่แดงอยู่ตอนนี้: {txt} ติดลบวันเดียวไม่ได้บอกอะไรมากนะ ลองดูว่าข่าวที่ทำให้ตกยังอยู่ไหม")
     big = [h for h in hs if (h["weight"] or 0) >= 15]
     out.append(f"ตอนนี้นายถือหุ้นรายตัว {len(hs)} ตัว มูลค่ารวมราว ${rep['total_value']:.0f} ก้อนยังไม่ใหญ่ เป็นช่วงฝึกมือที่ดี แต่ก็ควรดูสัดส่วนไว้ตั้งแต่ตอนนี้")
     if len(big) >= 3:

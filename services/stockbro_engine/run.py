@@ -10,6 +10,7 @@ from . import news as newsmod
 from .prices import load_prices
 from .export import build_payload
 from .translate import translate_titles
+from .calendar import missing_earnings, upcoming
 from .levels import summarize
 from .report import build_report
 from .signals import connect, evaluate_pending, forward_stats, save_signal
@@ -42,15 +43,30 @@ def main(argv=None) -> int:
             sm = summarize(d["bars"])
             rep["market"][k] = {"price": sm["price"], "change_pct": sm["change_pct"], "date": sm["date"]}
 
+    # ปฏิทินล่วงหน้า (จาก config ไม่ดึงเน็ต)
+    from datetime import datetime, timezone
+    rep["calendar"] = {"events": upcoming(datetime.now(timezone.utc).date(), cfg, ROOT / "config" / "calendar.json"),
+                       "missing_earnings": missing_earnings(cfg)}
+
     # แปลพาดหัว (เฉพาะ live; offline ไม่แตะเน็ต)
     if not args.offline and not args.no_translate:
         titles = [n["title"] for r in rep["holdings"] for n in r["news"]]
-        tr = translate_titles(titles, ROOT / "data" / "cache" / "translations.json")
+        from .relevance import ALIASES
+        known = {h["ticker"] for h in cfg["holdings"]} | {h["name"] for h in cfg["holdings"]}
+        for h in cfg["holdings"]:
+            known |= set(h.get("aliases", [])) | set(ALIASES.get(h["ticker"], []))
+        # ไฟล์ cache เวอร์ชัน 2 (ของเก่าแปลชื่อเพี้ยน ไม่ใช้ต่อ)
+        tr = translate_titles(titles, ROOT / "data" / "cache" / "translations_v2.json", known=known)
         for r in rep["holdings"]:
             for n in r["news"]:
                 if n["title"] in tr:
                     n["title_th"] = tr[n["title"]]
-        print(f"แปลพาดหัวได้ {len(tr)}/{len(titles)} เรื่อง")
+        from .translate import LAST_STATS as st
+        print(f"แปลพาดหัวได้ {len(tr)}/{len(set(titles))} เรื่อง (จากแคช {st.get('cached', 0)}, แปลใหม่ {st.get('new', 0)}, ใช้แผนสำรองแบบท่อน {st.get('fallback', 0)})")
+        if st.get("errors"):
+            print(f"  ! เรียกตัวแปลพลาด {st['errors']} ครั้ง: {st.get('last_error')} — ถ้าเป็นเรื่องโควตา MyMemory รายวัน ตั้ง STOCKBRO_MYMEMORY_EMAIL (อีเมลอะไรก็ได้ของคุณ) เพื่อเพิ่มจาก 5,000 เป็น 50,000 ตัวอักษร/วัน แล้วรันซ้ำ จะแปลต่อจากที่ค้างไว้", file=sys.stderr)
+        if st.get("skipped_budget"):
+            print(f"  ! ข้ามไป {st['skipped_budget']} เรื่องเพราะเกินจำนวน/เวลาต่อรอบ รันซ้ำจะแปลต่อ")
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)

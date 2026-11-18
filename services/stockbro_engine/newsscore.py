@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 CATEGORIES = [
     ("งบ/คาดการณ์", re.compile(r"earnings|guidance|revenue|forecast|outlook|quarter", re.I), 3),
@@ -86,13 +86,27 @@ def sentiment(title: str) -> str:
     return "กลาง/ไม่ชัด"
 
 
-def score_news(items: List[Dict], now: Optional[datetime] = None, top: int = 5) -> List[Dict]:
+MULTI_TICKER_MIN = 3     # พาดหัวที่มี ticker ตั้งแต่ 3 ตัวขึ้นไป = ข่าวภาพรวมตลาด/ลิสต์หุ้น ไม่ใช่ข่าวเฉพาะตัว
+MULTI_TICKER_FACTOR = 0.5  # ค่าตั้งต้น: ลดคะแนนลงครึ่งหนึ่ง
+
+
+def ticker_count(title: str, universe: Iterable[str]) -> int:
+    """นับจำนวน ticker (ตัวพิมพ์ใหญ่ติดกันทั้งคำ) จาก universe ที่ปรากฏในพาดหัว"""
+    return sum(1 for t in set(universe) if re.search(rf"(?<![A-Za-z0-9]){re.escape(t)}(?![A-Za-z0-9])", title))
+
+
+def score_news(items: List[Dict], now: Optional[datetime] = None, top: int = 5,
+               universe: Iterable[str] = ()) -> List[Dict]:
+    universe = list(universe)
     out = []
     for g in cluster(items):
         rep = sorted(g, key=lambda x: x.get("published") or "", reverse=True)[0]
         cat, w = categorize(rep["title"])
         h = age_hours(rep.get("published"), now)
         score = w * recency(h) * (1 + 0.2 * min(len(g) - 1, 4))
+        multi = bool(universe) and ticker_count(rep["title"], universe) >= MULTI_TICKER_MIN
+        if multi:
+            score *= MULTI_TICKER_FACTOR
         out.append({
             "title": rep["title"],
             "link": rep["link"],
@@ -104,6 +118,7 @@ def score_news(items: List[Dict], now: Optional[datetime] = None, top: int = 5) 
             "n_sources": len(g),
             "score": round(score, 2),
             "stale": h is not None and h > 24 * 7,
+            "multi_ticker": multi,
         })
     out.sort(key=lambda x: -x["score"])
     return out[:top]
